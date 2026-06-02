@@ -1,0 +1,10 @@
+name: AI-Bootcamp
+version: 1.0.0
+description: APM project for AI-Bootcamp
+author: LEO.BERTAZZOLI
+dependencies:
+  apm:
+  - pchuri/confluence-cli/plugins/confluence
+  mcp: []
+includes: auto
+scripts: {}

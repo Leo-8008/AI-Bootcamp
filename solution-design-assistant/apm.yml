@@ -1,0 +1,14 @@
+name: cd solution-design-assistant
+version: apm install
+description: apm install
+author: apm install pchuri/confluence-cli/plugins/confluence
+# Which agent platforms to deploy to.
+# Resolution order: --target flag > this field > auto-detect from filesystem.
+# Accepted values: copilot, claude, cursor, opencode, codex, gemini, windsurf, all
+targets:
+- copilot
+dependencies:
+  apm: []
+  mcp: []
+includes: auto
+scripts: {}

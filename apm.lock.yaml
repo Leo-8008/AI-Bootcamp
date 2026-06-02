@@ -1,0 +1,13 @@
+lockfile_version: '1'
+generated_at: '2026-06-02T13:23:19.942391+00:00'
+apm_version: 0.14.1
+dependencies:
+- repo_url: pchuri/confluence-cli
+  host: github.com
+  resolved_commit: ddd5b93a29541185406ca3a87ba0ec392adc9e0b
+  virtual_path: plugins/confluence
+  is_virtual: true
+  package_type: marketplace_plugin
+  deployed_files:
+  - .claude/skills/confluence
+  content_hash: sha256:7ecce0b4402b39227221ee6e15afd5c5e8581496b1472b882ae685c664c61aea
