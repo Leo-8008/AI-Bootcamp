@@ -88,11 +88,30 @@ Sobald die Konfiguration steht, kennt Claude den Skill `confluence` automatisch 
 
 ### Sub-Agent `solution-design-assistant`
 
+Spezialisierter Agent für **Zurich EAM-Aufgaben**: Architecture Decisions, Standards, Exceptions, EA Principles, Software-/Tool-Evaluations, Solution Blueprints und allgemeine One-Pager.
+
 Du kannst ihn direkt aufrufen, z. B.:
 
-> *„Nutze den `solution-design-assistant` Agent: Hier ist eine Confluence-Seite [URL] und meine Idee — bau mir einen One-Pager."*
+> *„Nutze den `solution-design-assistant`: Ich brauche eine Architecture Decision für die Migration der Auth-Middleware."*
 
-Claude erkennt die Beschreibung im Frontmatter und delegiert. Der Agent fragt zurück, wenn Problem/Scope/Business-Objective unklar sind, und baut einen strukturierten One-Pager.
+Der Agent zieht automatisch das passende Confluence-Template + die Begriffsdefinitionen aus dem ITEAC-Space und stellt klärende Fragen, bevor er das Output produziert.
+
+**Hinterlegte Confluence-Templates (ITEAC-Space):**
+
+| Aufgabe | Template-Page-ID |
+|---|---|
+| Architecture Decision (ADR) | `378448646` |
+| EA Standard | `134849433` |
+| Exception (Standard-Abweichung) | `369698720` |
+| EA Principle | `264221812` |
+| Software-Evaluation | `395517931` |
+| Tool-Evaluation | `331163651` |
+| Solution Blueprint (Arc42) | `729905979` |
+| **Begriffsdefinitionen** (immer geladen) | `78481720` |
+| EA-Standard Definition Process | `357834693` |
+| Templates-Übersicht (Fallback) | `434382050` |
+
+Bei neuen Templates → Page-ID in `.claude/agents/solution-design-assistant.md` ergänzen.
 
 ## Sicherheitshinweise
 

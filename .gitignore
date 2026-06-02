@@ -9,3 +9,18 @@
 # confluence-cli local config (contains personal access token)
 .confluence-cli/
 confluence-cli.config.json
+
+# Node.js
+node_modules/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
