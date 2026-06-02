@@ -1,3 +1,11 @@
+# Claude Code local settings (may contain secrets)
+.claude/settings.local.json
 
-# APM dependencies
-apm_modules/
+# Local environment & secrets
+.env
+.env.local
+*.local
+
+# confluence-cli local config (contains personal access token)
+.confluence-cli/
+confluence-cli.config.json

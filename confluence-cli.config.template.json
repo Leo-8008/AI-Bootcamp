@@ -1,0 +1,13 @@
+{
+  "_comment": "Template for ~/.confluence-cli/config.json. Copy to your home directory and fill in your personal token. NEVER commit a real token.",
+  "activeProfile": "default",
+  "profiles": {
+    "default": {
+      "domain": "confluence.zurich.com",
+      "protocol": "https",
+      "apiPath": "/rest/api",
+      "authType": "bearer",
+      "token": "<YOUR_PERSONAL_ACCESS_TOKEN_HERE>"
+    }
+  }
+}
