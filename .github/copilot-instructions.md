@@ -150,8 +150,19 @@ The one-pager produced here is the authoritative input for `solution-design-assi
 
 Produces decision-ready EAM artifacts using Zurich's official Confluence templates. Always loads the EAM vocabulary page (`78481720`) first so terminology is used in the Zurich-specific sense.
 
-**Invoke with:**
+> **Copilot CLI note:** Sub-agents in Copilot CLI do not have shell access, so the agent cannot call `confluence-cli` directly. Use the two-step pattern below.
+
+**Copilot CLI — two-step invocation:**
+
+Step 1 — ask Copilot CLI to fetch the needed pages first:
+> *"Fetch Confluence pages 78481720 and 378448646 and then use the `solution-design-assistant` to create an Architecture Decision for [your topic]."*
+
+Copilot CLI will read both pages with `powershell` (it has shell access) and pass the content inline to the agent. The agent then works entirely from the provided text.
+
+**Claude Code — direct invocation (shell available in sub-agent):**
 > *"Use the `solution-design-assistant`: I need an Architecture Decision for migrating the auth middleware."*
+
+The agent fetches Confluence pages itself via `Bash`.
 
 If the problem is vague or no Problem One-Pager exists, the agent will recommend running `problem-framing-coach` first.
 
