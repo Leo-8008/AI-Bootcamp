@@ -131,6 +131,22 @@ The coach will redirect from solution-talk to problem-talk and produce a one-pag
 
 **Classification:** All files include `_Classification: Internal Use Only_` in their header.
 
+## Persönliche Konfiguration (`.env.local`)
+
+Der `problem-framing-coach` liest beim Start `.env.local` aus dem Projekt-Root, um den persönlichen Shared-Folder-Pfad zu laden — so wird kein benutzerspezifischer Pfad ins Repo committed.
+
+```bash
+cp .env.local.template .env.local
+# Dann .env.local öffnen und PROBLEM_STATEMENTS_SHARED_PATH setzen
+```
+
+Beispiel:
+```
+PROBLEM_STATEMENTS_SHARED_PATH=C:\Users\DEIN.NAME\Zurich Insurance\CrEAM - Dokumente\01 Architecture Governance\AI Bootcamp project\Problem Statements
+```
+
+Wenn die Variable leer ist oder der Pfad nicht erreichbar ist, speichert der Agent nur lokal unter `problem-statements/` und gibt eine Warnung aus.
+
 ## Sicherheitshinweise
 
 - **Token niemals committen.** `.gitignore` schließt `.env*`, `.confluence-cli/` und `.claude/settings.local.json` aus.

@@ -4,6 +4,24 @@ description: Use this agent for Zurich EAM (Enterprise Architecture Management) 
 tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch
 ---
 
+## Cross-platform tool reference
+
+This agent runs on Claude Code and GitHub Copilot CLI. Semantic → tool name mapping:
+
+| Action | Claude Code | Copilot CLI |
+|---|---|---|
+| Run a shell command | `Bash` | `powershell` |
+| Read a file | `Read` | `view` |
+| Create a new file | `Write` | `create` |
+| Modify an existing file | `Edit` | `edit` |
+| Search file contents | `Grep` | `grep` |
+| Find files by name | `Glob` | `glob` |
+| Fetch a URL | `WebFetch` | `web_fetch` |
+
+Use neutral verbs in reasoning ("run a shell command", "read the file"). The runtime will resolve to the correct tool.
+
+---
+
 You are a Solution Design Facilitator for Zurich's Enterprise Architecture practice. Your job is to turn vague ideas into clear, decision-ready output that follows Zurich EAM conventions — not to implement solutions.
 
 ## Confluence context — authoritative sources
@@ -39,16 +57,29 @@ After identifying what the user is actually trying to produce, also load the mat
 
 ### How to invoke the Confluence CLI
 
-The `confluence` command may not be on the default `PATH`. Use this pattern in `Bash`:
+The `confluence` command may not be on the default `PATH`. Run a shell command using the appropriate pattern for the current platform:
 
+**bash / Git Bash:**
 ```bash
 export PATH="${APPDATA:-$HOME/AppData/Roaming}/npm:$PATH"
 confluence read <pageId> --format markdown
 ```
 
-If `confluence` still isn't found, resolve the global install location at runtime and invoke the script directly — works on any machine, no hard-coded user path:
+**PowerShell:**
+```powershell
+$env:PATH = "$env:APPDATA\npm;$env:PATH"
+confluence read <pageId> --format markdown
+```
 
+If `confluence` still isn't found, resolve the global install location at runtime — works on any platform without hard-coded paths:
+
+**bash:**
 ```bash
+node "$(npm root -g)/confluence-cli/bin/confluence.js" read <pageId> --format markdown
+```
+
+**PowerShell:**
+```powershell
 node "$(npm root -g)/confluence-cli/bin/confluence.js" read <pageId> --format markdown
 ```
 

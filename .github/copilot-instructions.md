@@ -188,6 +188,42 @@ EAM artifact (ADR / Standard / Exception / Blueprint / …)
 
 ---
 
+## Cross-platform tool names
+
+Agent definition files (`.claude/agents/`) use Claude Code tool names in their frontmatter (`tools: Bash, Read, Write, ...`). GitHub Copilot CLI uses different names for the same capabilities. The agent body text uses neutral verbs ("run a shell command", "read the file") so both runtimes understand it correctly.
+
+Quick mapping reference:
+
+| Action | Claude Code | Copilot CLI |
+|---|---|---|
+| Shell command | `Bash` | `powershell` |
+| Read file | `Read` | `view` |
+| Create file | `Write` | `create` |
+| Edit file | `Edit` | `edit` |
+| Fetch URL | `WebFetch` | `web_fetch` |
+
+**Do not add Copilot CLI tool names to the `tools:` frontmatter** — it may break Claude Code's tool gating.
+
+---
+
+## Personal configuration (`.env.local`)
+
+The `problem-framing-coach` reads `.env.local` at startup to get your personal shared folder path — no user-specific path is ever committed to the repo.
+
+```powershell
+Copy-Item .env.local.template .env.local
+# Open .env.local and set PROBLEM_STATEMENTS_SHARED_PATH
+```
+
+Example:
+```
+PROBLEM_STATEMENTS_SHARED_PATH=C:\Users\YOUR.NAME\Zurich Insurance\CrEAM - Dokumente\01 Architecture Governance\AI Bootcamp project\Problem Statements
+```
+
+If the variable is empty or the path is unreachable, the agent saves locally to `problem-statements/` only and warns you.
+
+---
+
 ## Security
 
 - **Never commit a token.** `.gitignore` excludes `.env*`, `.confluence-cli/`, and `.claude/settings.local.json`.
