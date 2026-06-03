@@ -186,6 +186,7 @@ Why this script exists:
 - fetches the matching template page(s)
 - avoids the Windows Git Bash shim issue by invoking `confluence-cli` through `node`
 - emits a single prompt-ready Markdown bundle for `solution-design-assistant-copilot`
+- includes a `Source Index` with page title + direct Confluence link so the agent can append a `## Sources` footer automatically
 
 ### Step 3 — handle ambiguous routing
 
@@ -195,6 +196,8 @@ Why this script exists:
 ### Step 4 — invoke the Copilot-specific agent
 
 Pass the helper output inline to `solution-design-assistant-copilot`.
+
+The agent should append a `## Sources` section at the end of its response containing the Confluence pages it actually used, with page title, page ID, and direct link.
 
 **Recommended natural-language pattern:**
 

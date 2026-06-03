@@ -13,6 +13,40 @@ $ErrorActionPreference = 'Stop'
 $alwaysPageId = '78481720'
 $overviewPageId = '434382050'
 $standardProcessPageId = '357834693'
+$confluenceBaseUrl = 'https://confluence.zurich.com/pages/viewpage.action?pageId='
+
+$pageMetadata = @{
+    '78481720' = @{
+        Title = '1.5 Standards, Patterns, Decisions, Exception and Technical Debt'
+    }
+    '378448646' = @{
+        Title = 'Template Architecture Decision'
+    }
+    '134849433' = @{
+        Title = 'Template - EA Standards'
+    }
+    '369698720' = @{
+        Title = 'Template - Exception'
+    }
+    '264221812' = @{
+        Title = 'Template - EAP-xx Principle'
+    }
+    '395517931' = @{
+        Title = 'Template - SWBP - Software Evaluation'
+    }
+    '331163651' = @{
+        Title = 'Template - Tool Evaluation'
+    }
+    '729905979' = @{
+        Title = 'Arc42 Rev2 Solution Blueprint'
+    }
+    '357834693' = @{
+        Title = 'EA-Standard Definition Process'
+    }
+    '434382050' = @{
+        Title = '1.7 Templates'
+    }
+}
 
 $taskTypeToPages = @{
     'adr' = @('378448646')
@@ -213,14 +247,35 @@ function Get-ConfluencePageContent {
     return $content
 }
 
+function Get-ConfluencePageTitle {
+    param(
+        [string]$PageId,
+        [string]$Content
+    )
+
+    if ($pageMetadata.ContainsKey($PageId) -and $pageMetadata[$PageId].ContainsKey('Title')) {
+        return $pageMetadata[$PageId].Title
+    }
+
+    $headingMatch = [regex]::Match($Content, '(?m)^\s*#\s+(?<title>.+?)\s*$')
+    if ($headingMatch.Success) {
+        return $headingMatch.Groups['title'].Value.Trim()
+    }
+
+    return "Confluence page $PageId"
+}
+
 $resolvedTaskType = if ($PSCmdlet.ParameterSetName -eq 'TaskType') { $TaskType } else { Resolve-TaskTypeFromIntent -Text $IntentText }
 $route = Resolve-Route -ResolvedTaskType $resolvedTaskType
 $cliPath = Get-ConfluenceCliPath
 
 $fetchedPages = foreach ($pageId in $route.pageIds) {
+    $content = Get-ConfluencePageContent -CliPath $cliPath -PageId $pageId
     [pscustomobject]@{
         PageId = $pageId
-        Content = Get-ConfluencePageContent -CliPath $cliPath -PageId $pageId
+        Title = Get-ConfluencePageTitle -PageId $pageId -Content $content
+        Url = "$confluenceBaseUrl$pageId"
+        Content = $content
     }
 }
 
@@ -239,10 +294,18 @@ $output.Add("- Routed task type: $($route.taskType)")
 $output.Add("- Suggested next action: $($route.nextAction)")
 $output.Add("- Confluence page IDs: $([string]::Join(', ', $route.pageIds))")
 $output.Add('')
+$output.Add('## Source Index')
+$output.Add('| Page ID | Title | Link |')
+$output.Add('|---|---|---|')
+foreach ($page in $fetchedPages) {
+    $output.Add("| $($page.PageId) | $($page.Title.Replace('|', '\|')) | [$($page.PageId)]($($page.Url)) |")
+}
+$output.Add('')
 
 $index = 1
 foreach ($page in $fetchedPages) {
-    $output.Add("--- Document ${index}: Confluence page $($page.PageId) ---")
+    $output.Add("<!-- CONFLUENCE-SOURCE: pageId=$($page.PageId); title=$($page.Title); url=$($page.Url) -->")
+    $output.Add("--- Document ${index}: Confluence page $($page.PageId) - $($page.Title) ---")
     $output.Add($page.Content)
     $output.Add('')
     $index++

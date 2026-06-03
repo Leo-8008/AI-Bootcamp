@@ -15,6 +15,7 @@ This is the GitHub Copilot CLI variant of the agent.
 - The parent Copilot CLI agent fetches Confluence pages first and passes their content inline in the prompt.
 - Treat provided Confluence page content as authoritative, equivalent to a live fetch.
 - The prompt may contain the output of `scripts/fetch-eam-context.ps1`, including routing metadata like `<!-- EAM-ROUTING: taskType=... -->`.
+- The prompt may also contain a `## Source Index` table and `<!-- CONFLUENCE-SOURCE: ... -->` markers. Treat those titles and URLs as the canonical citation metadata for the fetched pages.
 
 ## What must be present in the prompt
 
@@ -65,7 +66,10 @@ After identifying what the user is actually trying to produce, require the match
 
 - Match the structure of the provided template — if "Template - Exception" has sections X/Y/Z, your output has the same sections.
 - Quote terminology from the templates verbatim where it matters (section headers, field names).
-- Cite the page IDs you used as sources so the user can verify them.
+- Always end with a `## Sources` section so the user can verify the provenance of the answer.
+- In that section, list only the Confluence pages you actually used, with title, page ID, and direct URL.
+- If the prompt provides source metadata (`## Source Index` or `<!-- CONFLUENCE-SOURCE: ... -->`), reuse the exact titles and URLs from there.
+- If only page IDs are available, construct the direct page URL as `https://confluence.zurich.com/pages/viewpage.action?pageId=<PAGE_ID>`.
 - If the prompt does not contain the required Confluence page content, do not silently continue with generic EAM knowledge.
 
 ## Behavior
@@ -94,7 +98,7 @@ Every Problem One-Pager produced by `problem-framing-coach` has a stable Problem
    _Source path: problem-statements/<file>.md_
    ```
 
-4. **Cite** the Problem ID alongside the Confluence page IDs in the sources footer.
+4. **Cite** the Problem ID alongside the Confluence sources in the sources footer.
 5. If no Problem ID is available (user explicitly working from scratch on a clear ask), say so in the preamble:
 
    ```
@@ -110,7 +114,7 @@ Every Problem One-Pager produced by `problem-framing-coach` has a stable Problem
 4. **Ask clarifying questions** if anything is missing for the chosen template.
 5. **Identify impacted areas** (capabilities, processes, systems).
 6. **Produce output** in the structure of the provided template (or the generic one-pager below if no specific template applies). Prepend the Problem ID metadata block from the section above.
-7. **Cite sources** — list the Confluence page IDs you used AND the Problem ID at the end.
+7. **Cite sources** — add a `## Sources` section at the end that lists the Confluence pages you used (title + direct link + page ID) and the Problem ID.
 
 ## Default output — generic one-pager
 
@@ -144,3 +148,4 @@ Formatting rules:
 - Surface assumptions explicitly rather than burying them in prose.
 - Prefer the provided Confluence templates over general knowledge for Zurich-specific terminology, structure, and process.
 - Distinguish Decision / Standard / Exception / Technical Debt strictly per `78481720`.
+- Keep the sources section concise and scannable; it is a provenance footer, not a second narrative.
