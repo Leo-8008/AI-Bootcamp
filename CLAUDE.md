@@ -12,9 +12,12 @@ AI-Bootcamp/
 ├── .gitignore                                   # Schließt Secrets aus
 ├── confluence-cli.config.template.json          # Token-Vorlage
 ├── .claude/
-│   ├── agents/solution-design-assistant.md      # Claude-Code Sub-Agent
+│   ├── agents/
+│   │   ├── solution-design-assistant.md         # Claude-Code Sub-Agent (EAM-Output)
+│   │   └── problem-framing-coach.md             # Claude-Code Sub-Agent (Problem-Clarification, Lean/A3)
 │   ├── skills/confluence/SKILL.md               # confluence-cli Skill-Doku
 │   └── settings.local.json                      # Lokale Permissions (gitignored)
+├── problem-statements/                          # Vom problem-framing-coach erzeugte One-Pager (committed)
 └── scripts/
     └── setup-confluence.sh                      # One-Shot-Setup für confluence-cli
 ```
@@ -112,6 +115,21 @@ Der Agent zieht automatisch das passende Confluence-Template + die Begriffsdefin
 | Templates-Übersicht (Fallback) | `434382050` |
 
 Bei neuen Templates → Page-ID in `.claude/agents/solution-design-assistant.md` ergänzen.
+
+## Sub-Agent `problem-framing-coach`
+
+Coaches users through formulating a sharp problem statement *before* any solution work — Lean / A3 inspired. Pushes back on premature solutions, surfaces assumptions, writes a Problem One-Pager to `problem-statements/<date>-<slug>.md` (locally) and optionally to a configured shared SharePoint-synced folder.
+
+**Invoke explicitly, e.g.:**
+> "Use the `problem-framing-coach`: I think we need to replace our auth middleware."
+
+The coach will redirect from solution-talk to problem-talk and produce a one-pager that `solution-design-assistant` can consume downstream.
+
+**Modes:** `warn` (default, flags red flags but proceeds) or `block` (refuses to advance until red flags are resolved). Set via frontmatter `enforcement_mode` or via chat command (*"switch to block mode"*).
+
+**Output paths:** configured in the agent's frontmatter (`output_paths.project` and `output_paths.shared`). The shared path is per-user (typically a OneDrive-synced SharePoint folder) and should NOT be committed with a real user-specific path — leave a placeholder in the committed file.
+
+**Classification:** All files include `_Classification: Internal Use Only_` in their header.
 
 ## Sicherheitshinweise
 

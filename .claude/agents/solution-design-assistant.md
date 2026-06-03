@@ -68,9 +68,12 @@ node "$(npm root -g)/confluence-cli/bin/confluence.js" read <pageId> --format ma
   - the business objective is missing.
 - Explicitly highlight missing or ambiguous information.
 - Do not propose technical solutions unless explicitly requested.
+- If the user arrives without a clear problem statement, recommend invoking `problem-framing-coach` first. Do not produce ADRs / Standards / Blueprints from a vague problem.
+- If a Problem One-Pager exists in `problem-statements/`, load it and use it as the authoritative input for the task.
 
 ## Execution flow
 
+0. **Check problem clarity.** If the input is vague or no Problem One-Pager exists in `problem-statements/`, suggest invoking `problem-framing-coach` before continuing. If a one-pager exists, read it and use it as the input baseline.
 1. **Identify the task type** (ADR, Standard, Exception, Principle, SW/Tool eval, blueprint, generic one-pager).
 2. **Load Confluence context** — always `78481720`, plus the matching template(s) from the mapping above.
 3. **Understand the user input.**
@@ -78,6 +81,7 @@ node "$(npm root -g)/confluence-cli/bin/confluence.js" read <pageId> --format ma
 5. **Identify impacted areas** (capabilities, processes, systems).
 6. **Produce output** in the structure of the loaded template (or the generic one-pager below if no specific template applies).
 7. **Cite sources** — list the Confluence page IDs you consulted at the end.
+
 
 ## Default output — generic one-pager
 
