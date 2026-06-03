@@ -2,9 +2,10 @@
 
 This workspace connects GitHub Copilot CLI to Zurich's internal Confluence (ITEAC space) to produce Enterprise Architecture Management (EAM) artifacts — Architecture Decisions, Standards, Exceptions, EA Principles, Software/Tool Evaluations, and Solution Blueprints.
 
-Two custom agents drive the main workflow:
+Three custom agents support the workflow:
 1. **`problem-framing-coach`** — clarify the problem *before* any solution work (Lean / A3 style)
-2. **`solution-design-assistant`** — pull Confluence templates and produce decision-ready EAM output
+2. **`solution-design-assistant`** — Claude-first variant; fetches Confluence pages itself when shell is available
+3. **`solution-design-assistant-copilot`** — Copilot-first variant; expects Confluence pages to be pre-fetched by the parent Copilot session
 
 ---
 
@@ -19,12 +20,14 @@ AI-Bootcamp/
 ├── confluence-cli.config.template.json  # Token template (never commit a real token)
 ├── .claude/
 │   ├── agents/
-│   │   ├── solution-design-assistant.md # Custom agent — EAM output
-│   │   └── problem-framing-coach.md     # Custom agent — Problem clarification
+│   │   ├── solution-design-assistant.md         # Claude-first EAM agent (direct Confluence fetch)
+│   │   ├── solution-design-assistant-copilot.md # Copilot-first EAM agent (pre-fetched Confluence content)
+│   │   └── problem-framing-coach.md             # Custom agent — Problem clarification
 │   └── skills/confluence/SKILL.md       # confluence-cli skill definition
 ├── problem-statements/                  # One-pagers produced by problem-framing-coach
 └── scripts/
-    └── setup-confluence.sh              # One-shot confluence-cli setup script
+    ├── setup-confluence.sh              # One-shot confluence-cli setup script
+    └── fetch-eam-context.ps1            # Copilot helper: route intent → fetch Confluence context
 ```
 
 ---
@@ -108,24 +111,24 @@ Or in natural language — Copilot will invoke the skill when a Confluence task 
 
 **Available operations:** `read`, `search`, `find`, `children`, `create`, `update`, `delete`, `move`, `attachments`, `convert` — full reference in `.claude/skills/confluence/SKILL.md`.
 
-**Fallback invocation** (if `confluence` is not on `PATH`):
+**Recommended invocation** (works on any platform, including Git Bash on Windows where the npm `confluence` shim is broken — it resolves `basedir` against the Git install root and crashes):
+
+```powershell
+node "$(npm root -g)/confluence-cli/bin/confluence.js" read <pageId> --format markdown
+```
+
+If `confluence` is on `PATH` and works in your shell (typically PowerShell or cmd, not Git Bash), the shorter form is also fine:
 
 ```powershell
 $env:PATH = "$env:APPDATA\npm;$env:PATH"
 confluence read <pageId> --format markdown
 ```
 
-Or without any PATH change:
-
-```powershell
-node "$(npm root -g)/confluence-cli/bin/confluence.js" read <pageId> --format markdown
-```
-
 ---
 
 ## Custom agents
 
-Both agents are loaded automatically from `.claude/agents/` and available to Copilot CLI as custom agents. Invoke them explicitly to get the intended behaviour.
+All agents are loaded automatically from `.claude/agents/` and available to Copilot CLI as custom agents. Invoke them explicitly to get the intended behaviour.
 
 ### `problem-framing-coach`
 
@@ -146,25 +149,67 @@ The one-pager produced here is the authoritative input for `solution-design-assi
 
 ---
 
-### `solution-design-assistant`
+### `solution-design-assistant-copilot`
 
-Produces decision-ready EAM artifacts using Zurich's official Confluence templates. Always loads the EAM vocabulary page (`78481720`) first so terminology is used in the Zurich-specific sense.
+Produces decision-ready EAM artifacts using Zurich's official Confluence templates. Use this variant in GitHub Copilot CLI.
 
-> **Copilot CLI note:** Sub-agents in Copilot CLI do not have shell access, so the agent cannot call `confluence-cli` directly. Use the two-step pattern below.
+> **Why a separate Copilot agent?** Copilot CLI sub-agents do not have shell access, so this agent is designed to work from pre-fetched Confluence content only.
 
-**Copilot CLI — two-step invocation:**
+**Invoke with:**
 
-Step 1 — ask Copilot CLI to fetch the needed pages first:
-> *"Fetch Confluence pages 78481720 and 378448646 and then use the `solution-design-assistant` to create an Architecture Decision for [your topic]."*
+> *"Fetch Confluence pages 78481720 and 378448646 and then use the `solution-design-assistant-copilot` to create an Architecture Decision for [your topic]."*
 
-Copilot CLI will read both pages with `powershell` (it has shell access) and pass the content inline to the agent. The agent then works entirely from the provided text.
-
-**Claude Code — direct invocation (shell available in sub-agent):**
-> *"Use the `solution-design-assistant`: I need an Architecture Decision for migrating the auth middleware."*
-
-The agent fetches Confluence pages itself via `Bash`.
+Copilot CLI reads the pages with `powershell` in the main session and passes the content inline to the agent. The agent then works entirely from the provided text.
 
 If the problem is vague or no Problem One-Pager exists, the agent will recommend running `problem-framing-coach` first.
+
+## Natural prompt routing in Copilot CLI
+
+For normal user prompts, Copilot CLI should hide the page-ID lookup and do the routing itself.
+
+### Step 1 — decide whether this is problem framing or solution design
+
+- If the user describes a **vague problem, pain point, or solution idea without a clear artifact type**, use `problem-framing-coach` first.
+- If the user clearly wants an **ADR, Standard, Exception, Principle, evaluation, or Blueprint**, fetch EAM context first and then invoke `solution-design-assistant-copilot`.
+
+### Step 2 — fetch EAM context automatically
+
+Use the helper script below from the main Copilot session:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\fetch-eam-context.ps1 -IntentText "<user request>"
+```
+
+Why this script exists:
+- infers the likely EAM task type from natural language
+- always includes page `78481720` (EAM vocabulary)
+- fetches the matching template page(s)
+- avoids the Windows Git Bash shim issue by invoking `confluence-cli` through `node`
+- emits a single prompt-ready Markdown bundle for `solution-design-assistant-copilot`
+
+### Step 3 — handle ambiguous routing
+
+- If the helper returns `taskType=adr-or-standard`, ask one clarifying question or let `solution-design-assistant-copilot` ask it.
+- If the helper returns `taskType=unknown`, ask one clarifying question about the intended artifact type before invoking the agent.
+
+### Step 4 — invoke the Copilot-specific agent
+
+Pass the helper output inline to `solution-design-assistant-copilot`.
+
+**Recommended natural-language pattern:**
+
+> *"Interpret my request, fetch the needed EAM Confluence context automatically, and then use `solution-design-assistant-copilot` to help me. My request is: We should standardize our frontend framework across products."*
+
+**More explicit pattern:**
+
+> *"Run `powershell -ExecutionPolicy Bypass -File .\\scripts\\fetch-eam-context.ps1 -IntentText \"We should standardize our frontend framework across products\"` and pass the result to `solution-design-assistant-copilot`."*
+
+### `solution-design-assistant`
+
+Produces the same kind of output, but is better suited to Claude Code because that runtime can give the sub-agent shell access.
+
+**Claude Code — direct invocation:**
+> *"Use the `solution-design-assistant`: I need an Architecture Decision for migrating the auth middleware."*
 
 **Confluence templates used (ITEAC space):**
 
@@ -181,7 +226,7 @@ If the problem is vague or no Problem One-Pager exists, the agent will recommend
 | EA Standard Definition Process | `357834693` |
 | Templates overview (fallback) | `434382050` |
 
-To add a new template: add its page ID to `.claude/agents/solution-design-assistant.md`.
+To add a new template: add its page ID to both solution-design-assistant agent files if both runtimes should support it.
 
 ---
 
@@ -192,7 +237,14 @@ User has a vague idea
         ↓
 problem-framing-coach   →  problem-statements/<date>-<slug>.md
         ↓
-solution-design-assistant  (reads the one-pager as input)
+solution-design-assistant-copilot  (Copilot CLI; uses pre-fetched Confluence pages)
+        ↓
+EAM artifact (ADR / Standard / Exception / Blueprint / …)
+
+Claude Code alternative:
+problem-framing-coach   →  problem-statements/<date>-<slug>.md
+        ↓
+solution-design-assistant  (Claude Code; fetches Confluence directly)
         ↓
 EAM artifact (ADR / Standard / Exception / Blueprint / …)
 ```
@@ -201,7 +253,9 @@ EAM artifact (ADR / Standard / Exception / Blueprint / …)
 
 ## Cross-platform tool names
 
-Agent definition files (`.claude/agents/`) use Claude Code tool names in their frontmatter (`tools: Bash, Read, Write, ...`). GitHub Copilot CLI uses different names for the same capabilities. The agent body text uses neutral verbs ("run a shell command", "read the file") so both runtimes understand it correctly.
+Agent definition files live in `.claude/agents/` because that is where the project currently keeps custom agent specs for both runtimes. `.github/` is for Copilot instructions, not where this project wires agent definitions.
+
+Agent definition files (`.claude/agents/`) use Claude Code tool names in their frontmatter (`tools: Bash, Read, Write, ...`). GitHub Copilot CLI uses different names for the same capabilities. The agent body text uses neutral verbs ("run a shell command", "read the file") so both runtimes understand it correctly where behavior is shared.
 
 Quick mapping reference:
 

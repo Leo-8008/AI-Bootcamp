@@ -13,13 +13,15 @@ AI-Bootcamp/
 ├── confluence-cli.config.template.json          # Token-Vorlage
 ├── .claude/
 │   ├── agents/
-│   │   ├── solution-design-assistant.md         # Claude-Code Sub-Agent (EAM-Output)
+│   │   ├── solution-design-assistant.md         # Claude-Code Sub-Agent (EAM-Output, direct Confluence fetch)
+│   │   ├── solution-design-assistant-copilot.md # Copilot-optimized variant (expects pre-fetched Confluence pages)
 │   │   └── problem-framing-coach.md             # Claude-Code Sub-Agent (Problem-Clarification, Lean/A3)
 │   ├── skills/confluence/SKILL.md               # confluence-cli Skill-Doku
 │   └── settings.local.json                      # Lokale Permissions (gitignored)
 ├── problem-statements/                          # Vom problem-framing-coach erzeugte One-Pager (committed)
 └── scripts/
-    └── setup-confluence.sh                      # One-Shot-Setup für confluence-cli
+    ├── setup-confluence.sh                      # One-Shot-Setup für confluence-cli
+    └── fetch-eam-context.ps1                    # Copilot-Helfer: Intent → passende Confluence-Seiten
 ```
 
 ## Voraussetzungen

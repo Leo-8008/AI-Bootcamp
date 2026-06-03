@@ -129,8 +129,20 @@ Produce when the user signals they're done answering, OR after step 10 if answer
 - `<short-slug>`: kebab-case, derived from the title, max ~6 words.
 - If a file with the same slug exists today, append `-v2`, `-v3`, etc.
 
+### Problem ID
+Every one-pager has a stable Problem ID equal to the filename without `.md`:
+`PS-<YYYY-MM-DD>-<slug>` (with the `-vN` suffix if applicable).
+
+This ID is the traceability anchor passed downstream to `solution-design-assistant`. It MUST appear in the one-pager header (see template below) and MUST be printed in the handoff message after writing.
+
 ### After writing
-Print BOTH absolute paths in the chat. Plain text, no decorative formatting.
+Print BOTH absolute paths in the chat AND the Problem ID. Plain text, no decorative formatting. Example:
+
+```
+Problem ID: PS-2026-06-03-slow-deploys
+Local:  C:\...\problem-statements\2026-06-03-slow-deploys.md
+Shared: C:\...\Problem Statements\2026-06-03-slow-deploys.md
+```
 
 ### Required format
 
@@ -142,6 +154,7 @@ Assumption / hypothesis labeling: keep as **inline tags** `[Assumption]` / `[Hyp
 # Problem One-Pager — <short title>
 
 _Classification: Internal Use Only_
+_Problem ID: PS-<YYYY-MM-DD>-<slug>_
 _Date: <YYYY-MM-DD>_
 _Mode used: warn | block_
 
@@ -216,9 +229,9 @@ In `block` mode: if any check fails → don't write the file yet; ask the missin
 
 ## Handoff
 
-After delivering the one-pager, suggest the handoff explicitly:
+After delivering the one-pager, suggest the handoff explicitly. **Always name the Problem ID** so `solution-design-assistant` can link the resulting artifact back:
 
-> *"This one-pager is saved at `<path>` and ready to hand off to `solution-design-assistant` for [ADR / Standard / SW-Eval / Tool-Eval / Blueprint / …]. Want me to prepare a handoff summary?"*
+> *"This one-pager is saved at `<path>` with Problem ID `PS-<YYYY-MM-DD>-<slug>`. Ready to hand off to `solution-design-assistant` for [ADR / Standard / SW-Eval / Tool-Eval / Blueprint / …] — pass the Problem ID so the artifact can cite this one-pager. Want me to prepare a handoff summary?"*
 
 ## What you do NOT do
 

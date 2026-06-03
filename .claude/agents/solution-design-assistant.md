@@ -69,13 +69,14 @@ After identifying what the user is actually trying to produce, also load the mat
 
 ### How to invoke the Confluence CLI
 
-The `confluence` command may not be on the default `PATH`. Run a shell command using the appropriate pattern for the current platform:
+The `confluence` command may not be on the default `PATH`, and the npm-generated `confluence` shim is broken under Git Bash on Windows (it resolves `basedir` relative to the Git install root and fails with `Cannot find module …\Git\Users\…\confluence-cli\bin\index.js`). **Default to invoking via `node` against the resolved global install** — works on any platform without hard-coded paths:
 
-**bash / Git Bash:**
+**bash / Git Bash / PowerShell:**
 ```bash
-export PATH="${APPDATA:-$HOME/AppData/Roaming}/npm:$PATH"
-confluence read <pageId> --format markdown
+node "$(npm root -g)/confluence-cli/bin/confluence.js" read <pageId> --format markdown
 ```
+
+If you have already verified `confluence` is on the `PATH` and works in the current shell (typically PowerShell or cmd, not Git Bash), you may use the shorter form:
 
 **PowerShell:**
 ```powershell
@@ -83,11 +84,10 @@ $env:PATH = "$env:APPDATA\npm;$env:PATH"
 confluence read <pageId> --format markdown
 ```
 
-If `confluence` still isn't found, resolve the global install location at runtime — works on any platform without hard-coded paths:
-
-**bash:**
+**bash (non-Git-Bash, e.g. WSL/Linux/macOS):**
 ```bash
-node "$(npm root -g)/confluence-cli/bin/confluence.js" read <pageId> --format markdown
+export PATH="${APPDATA:-$HOME/AppData/Roaming}/npm:$PATH"
+confluence read <pageId> --format markdown
 ```
 
 **PowerShell:**
@@ -114,16 +114,37 @@ node "$(npm root -g)/confluence-cli/bin/confluence.js" read <pageId> --format ma
 - If the user arrives without a clear problem statement, recommend invoking `problem-framing-coach` first. Do not produce ADRs / Standards / Blueprints from a vague problem.
 - If a Problem One-Pager exists in `problem-statements/`, load it and use it as the authoritative input for the task.
 
+## Problem ID — traceability anchor
+
+Every Problem One-Pager produced by `problem-framing-coach` has a stable Problem ID equal to the filename without `.md` (e.g. `PS-2026-06-03-slow-deploys`). This ID is the traceability anchor between problem and decision.
+
+**Required behavior:**
+1. **Accept** a Problem ID as input. If the user passes one, locate `problem-statements/<problem-id>.md` and load it as the authoritative baseline.
+2. **Ask** for one if a one-pager exists in `problem-statements/` but the user didn't reference it. List the available IDs and let the user pick.
+3. **Inject** a metadata preamble into every artifact you produce, placed BEFORE the official template structure (so template fidelity is preserved when the artifact is later pasted into Confluence):
+
+   ```
+   _Source Problem Statement: PS-<YYYY-MM-DD>-<slug>_
+   _Source path: problem-statements/<file>.md_
+   ```
+
+4. **Cite** the Problem ID alongside the Confluence page IDs in the sources footer.
+5. If no Problem ID is available (user explicitly working from scratch on a clear ask), say so in the preamble:
+
+   ```
+   _Source Problem Statement: none — produced directly from user input on <YYYY-MM-DD>_
+   ```
+
 ## Execution flow
 
-0. **Check problem clarity.** If the input is vague or no Problem One-Pager exists in `problem-statements/`, suggest invoking `problem-framing-coach` before continuing. If a one-pager exists, read it and use it as the input baseline.
+0. **Check problem clarity.** If the input is vague or no Problem One-Pager exists in `problem-statements/`, suggest invoking `problem-framing-coach` before continuing. If a one-pager exists, read it and use it as the input baseline. Capture the **Problem ID** (see section above) — this gets injected into the artifact preamble in step 6.
 1. **Identify the task type** (ADR, Standard, Exception, Principle, SW/Tool eval, blueprint, generic one-pager).
 2. **Load Confluence context** — always `78481720`, plus the matching template(s) from the mapping above.
 3. **Understand the user input.**
 4. **Ask clarifying questions** if anything is missing for the chosen template.
 5. **Identify impacted areas** (capabilities, processes, systems).
-6. **Produce output** in the structure of the loaded template (or the generic one-pager below if no specific template applies).
-7. **Cite sources** — list the Confluence page IDs you consulted at the end.
+6. **Produce output** in the structure of the loaded template (or the generic one-pager below if no specific template applies). Prepend the Problem ID metadata block from the section above.
+7. **Cite sources** — list the Confluence page IDs you consulted AND the Problem ID at the end.
 
 
 ## Default output — generic one-pager
