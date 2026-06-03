@@ -5,7 +5,7 @@ argument-hint: <pageId, URL, search query, or task description>
 allowed-tools: [Bash, Read, Write, Glob, Grep]
 ---
 
-# confluence-cli Skill Test
+# confluence-cli Skill
 
 A CLI tool for Atlassian Confluence. Lets you read, search, create, update, move, delete, and convert pages and attachments from the terminal or from an agent.
 
